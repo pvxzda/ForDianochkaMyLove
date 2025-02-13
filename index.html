@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Валентинка 💖</title>
+    <style>
+        body {
+            text-align: center;
+            background-color: #ffc0cb;
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+            position: relative;
+        }
+        .container {
+            margin-top: 50px;
+        }
+        .gif-container img {
+            width: 300px;
+            height: auto;
+        }
+        .question {
+            font-size: 28px;
+            font-weight: bold;
+            margin-top: 20px;
+            color: #d1006f;
+        }
+        .buttons {
+            margin-top: 20px;
+            position: relative;
+        }
+        .heart-button {
+            font-size: 20px;
+            padding: 15px 30px;
+            border: none;
+            cursor: pointer;
+            border-radius: 50%;
+            transition: 0.3s;
+            color: white;
+            background: red;
+            font-weight: bold;
+            position: absolute;
+        }
+        .heart-button:hover {
+            background: darkred;
+        }
+        #noBtn {
+            left: 55%;
+        }
+        .hidden {
+            display: none;
+        }
+        canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Первый экран -->
+    <div id="startScreen" class="container">
+        <div class="gif-container">
+            <img src="img/start.gif" alt="Гифка с вопросом">
+        </div>
+        <p class="question">Будешь ли ты моей валентинкой? 💖</p>
+        <div class="buttons">
+            <button class="heart-button" id="yesBtn" style="left: 40%;">Да</button>
+            <button class="heart-button" id="noBtn" style="left: 55%;">Нет</button>
+        </div>
+    </div>
+
+    <!-- Экран после нажатия "Да" -->
+    <div id="yesScreen" class="container hidden">
+        <div class="gif-container">
+            <img src="img/happy.gif" alt="Счастливая гифка">
+        </div>
+        <h1 style="color: #d1006f;">YAPIIIII!!!! ❤️</h1>
+        <canvas id="confettiCanvas"></canvas>
+    </div>
+
+    <script>
+        const yesBtn = document.getElementById("yesBtn");
+        const noBtn = document.getElementById("noBtn");
+        const startScreen = document.getElementById("startScreen");
+        const yesScreen = document.getElementById("yesScreen");
+
+        let noClickCount = 0;
+        let noRunning = false;
+
+        // Кнопка "Нет" начинает убегать после первого нажатия
+        noBtn.addEventListener("click", () => {
+            noClickCount++;
+            noRunning = true;
+
+            if (noClickCount >= 5) {
+                noRunning = false; // После 5 нажатий кнопка больше не убегает
+                let growInterval = setInterval(() => {
+                    let currentSize = parseFloat(window.getComputedStyle(yesBtn).transform.split(",")[3]) || 1;
+                    yesBtn.style.transform = `scale(${currentSize + 0.1})`;
+
+                    if (currentSize >= 2.5) {
+                        clearInterval(growInterval);
+                        noBtn.style.display = "none";
+                    }
+                }, 100);
+            }
+        });
+
+        // Кнопка "Нет" убегает после первого нажатия, но только 5 раз
+        noBtn.addEventListener("mouseover", () => {
+            if (noClickCount > 0 && noClickCount < 5 && noRunning) {
+                let maxX = window.innerWidth - 200; // Оставляем запас, чтобы кнопка не выходила
+                let maxY = window.innerHeight - 150; // Ограничиваем верхний и нижний диапазон
+                let minX = 100; // Минимальное смещение от края
+                let minY = 50;
+
+                let x = Math.random() * (maxX - minX) + minX;
+                let y = Math.random() * (maxY - minY) + minY;
+
+                noBtn.style.left = `${x}px`;
+                noBtn.style.top = `${y}px`;
+            }
+        });
+
+        // Кнопка "Да" открывает новое окно с анимацией конфетти
+        yesBtn.addEventListener("click", () => {
+            startScreen.classList.add("hidden");
+            yesScreen.classList.remove("hidden");
+            startConfetti();
+        });
+
+        function startConfetti() {
+            const canvas = document.getElementById("confettiCanvas");
+            const ctx = canvas.getContext("2d");
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+
+            let confetti = [];
+
+            function createConfetti() {
+                for (let i = 0; i < 100; i++) {
+                    confetti.push({
+                        x: Math.random() * canvas.width,
+                        y: Math.random() * -canvas.height,
+                        size: Math.random() * 10 + 5,
+                        speed: Math.random() * 3 + 2,
+                        sway: Math.random() * 2 - 1,
+                        color: `hsl(${Math.random() * 360}, 100%, 70%)`
+                    });
+                }
+            }
+
+            function drawConfetti() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                confetti.forEach((c) => {
+                    ctx.fillStyle = c.color;
+                    ctx.beginPath();
+                    ctx.arc(c.x, c.y, c.size, 0, Math.PI * 2);
+                    ctx.fill();
+                });
+            }
+
+            function updateConfetti() {
+                confetti.forEach((c) => {
+                    c.y += c.speed;
+                    c.x += Math.sin(c.y * 0.02) * c.sway;
+                    if (c.y > canvas.height) {
+                        c.y = -10;
+                        c.x = Math.random() * canvas.width;
+                    }
+                });
+            }
+
+            function animateConfetti() {
+                drawConfetti();
+                updateConfetti();
+                requestAnimationFrame(animateConfetti);
+            }
+
+            createConfetti();
+            animateConfetti();
+        }
+    </script>
+
+</body>
+</html>
